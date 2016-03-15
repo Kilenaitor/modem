@@ -1,21 +1,34 @@
 var context = new (window.AudioContext || window.webkitAudioContext)();
-var stream = null;
-var alphabet = "\n abcdefghijklmnopqrstuvwxyz,.!";
+var analyser = context.createAnalyser();
+
+var buf = new Float32Array( 1024 );
+var MIN_SAMPLES = 0; // To be initailzed when context is set
+var mediaStreamSource = null;
+var analyser = null;
+
+var alphabet = "^\n abcdefghijklmnopqrstuvwxyz$";
 var start = '^';
 var end = '$';
+
 var freqMin = 440;
 var freqMax = 1760;
-//var freqMin = 18500;
-//var freqMax = 19500;
+
 var range = freqMax - freqMin;
 var processing = false;
 var listening = false;
+
+var message = "";
+var capturing = false;
+var finished_capturing = false;
 
 function submit() {
   if(processing)
     return;
   var message = document.getElementById('message').value;
+  if(message.length == 0)
+    return;
   processing = true;
+  document.getElementById('submit').disabled = true;
   process(message.toLowerCase());
 }
 
@@ -36,24 +49,153 @@ function listen() {
     document.getElementById('listen').innerText = "Cancel";
     document.getElementById('submit').disabled = true;
     message.placeholder = "Listening...";
+    liveInput();
   }
 }
 
-function listening() {
-  var timeout = 300; //ms
-  var constraints = {
-    audio: { optional: [{ echoCancellation: false }] }
-  };
+function stopListening() {
+  listening = false;
+  processing = false;
+  document.getElementById('listen').innerText = "Listen";
+  document.getElementById('submit').disabled = false;
+  message.placeholder = "Type Message";
+  message = "";
+  capturing = false;
+  finished_capturing = false;
+}
+
+function error() {
+  alert('Stream generation failed.');
+}
+
+function getUserMedia(dictionary, callback) {
+  try {
+    navigator.getUserMedia = 
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia;
+      navigator.getUserMedia(dictionary, callback, error);
+  } catch (e) {
+      alert('getUserMedia threw exception :' + e);
+  }
+}
+
+function gotStream(stream) {
+  // Create an AudioNode from the stream.
+  mediaStreamSource = context.createMediaStreamSource(stream);
+
+  // Connect it to the destination.
+  analyser = context.createAnalyser();
+  analyser.fftSize = 2048;
+  mediaStreamSource.connect(analyser);
+  updatePitch();
+}
+
+function output(...args) {
+  var result = args.join("");
+  var message = document.getElementById('message');
+  message.value = result;
+}
+
+function liveInput() {
+  getUserMedia(
+    {
+      "audio": {
+        "mandatory": {
+          "googEchoCancellation": "false",
+          "googAutoGainControl": "false",
+          "googNoiseSuppression": "false",
+          "googHighpassFilter": "false"
+        },
+        "optional": []
+      },
+    }, gotStream);
+}
+
+function autoCorrelate(buf, sampleRate) {
+  var SIZE = buf.length;
+  var MAX_SAMPLES = Math.floor(SIZE/2);
+  var best_offset = -1;
+  var best_correlation = 0;
+  var rms = 0;
+  var foundGoodCorrelation = false;
+  var correlations = new Array(MAX_SAMPLES);
   
-  stream = navigator.mediaDevices.getUserMedia(constraints)
-  .then(function(mediaStream) { ... })
-  .catch(function(error) { ... })
+  for(var i = 0; i < SIZE; i++) {
+    var val = buf[i];
+    rms += Math.pow(val, 2);
+  }
+  
+  rms = Math.sqrt(rms/SIZE);
+  if(rms < 0.01) {
+    //Not enough signal
+    return -1;
+  }
+  
+  var lastCorrelation = 1;
+  for(var offset = MIN_SAMPLES; offset < MAX_SAMPLES; offset++) {
+    var correlation = 0;
+    
+    for(var i = 0; i < MAX_SAMPLES; i++) {
+      correlation += Math.abs((buf[i]) - (buf[i + offset]));
+    }
+    correlation = 1 - (correlation/MAX_SAMPLES);
+    correlations[offset] = correlation; // Store for later
+    
+    if((correlation > 0.9) && (correlation > lastCorrelation)) {
+      foundGoodCorrelation = true;
+      if(correlation > best_correlation) {
+        best_correlation = correlation;
+        best_offset = offset;
+      }
+    } else if (foundGoodCorrelation) {
+      var shift = (correlations[best_offset+1] - correlations[best_offset-1])/correlations[best_offset];
+      return sampleRate/(best_offset + (8 * shift));
+    }
+    lastCorrelation = correlation;
+  }
+  
+  if(best_correlation > 0.01) {
+    return sampleRate/best_offset;
+  }
+  return -1;
+}
+
+function updatePitch(time) {
+  var cycles = new Array;
+  analyser.getFloatTimeDomainData(buf);
+  var ac = autoCorrelate(buf, context.sampleRate);
+  
+  var freq = null;
+  
+  if(ac !== -1 && ac < freqMax && ac > freqMin) {
+    freq = ac;
+    var note = toChar(freq);
+    if(note === "^") {
+      capturing = true;
+    }
+    if(note === "$") {
+      capturing = false;
+      finished_capturing = true;
+    }
+    if(capturing && note != "^") {
+      message += note;
+    }
+  } else {
+    //console.log("ac is -1");
+  }
+  if(finished_capturing) {
+    output("Received: \"", message, "\"");
+    stopListening();
+  }
+  if(listening) {
+    setTimeout(function() {
+      window.requestAnimationFrame(updatePitch);
+    }, 200)
+  }
 }
 
 function process(message) {
-  if(message.length == 0)
-    return;
-
   var message = start + message + end;
   
   var i = 0;
@@ -74,6 +216,7 @@ function process(message) {
   }
   setTimeout(function() {
     processing = false;
+    document.getElementById('submit').disabled = false;
   }, 200 * message.length);
 }
 
@@ -90,9 +233,9 @@ function toFreq(char) {
 
 function toChar(freq) {
   if(!(freqMin < freq && freq < freqMax)) {
-    if(freqMin - freq < 40) {
+    if(freqMin - freq < 50) {
       freq = freqMin;
-    } else if (freq - freqMax < 40) {
+    } else if (freq - freqMax < 50) {
       freq = freqMax;
     } else {
       console.error("Invalid frequency: ", freq);
@@ -102,8 +245,10 @@ function toChar(freq) {
   
   var percent = (freq - freqMin) / range;
   var index = Math.round(alphabet.length * percent);
+  if(index == alphabet.length)
+    return alphabet[index-1];
   return alphabet[index];
-}
+} 
 
 function emit(tone, time) {
   // GainNode
