@@ -221,8 +221,6 @@ function updateEmoji() {
   
   var freq = null;
   
-  console.log(freq);
-  
   if(ac !== -1 && ac < freqMax && ac > freqMin) {
     freq = ac;
     var note = toEmoji(freq);
@@ -365,7 +363,7 @@ function toChar(freq, emoji) {
   return alphabet[index];
 } 
 
-function toEoji(freq) {
+function toEmoji(freq) {
   if(!(freqMin < freq && freq < freqMax)) {
     if(freqMin - freq < 50) {
       freq = freqMin;
