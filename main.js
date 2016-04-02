@@ -149,7 +149,7 @@ function gotStream(stream) {
 
 function output() {
   if(typeof arguments !== undefined && arguments.length > 0) {
-    var result = arguments.join("");
+    var result = Array.prototype.join.call(arguments, "");
     var message = document.getElementById('message');
     message.value = result;
   }
