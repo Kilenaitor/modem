@@ -290,10 +290,9 @@ function updatePitch() {
 }
 
 function selectEmoji(emoji) {
-  console.log(emoji);
-  var selected_emoji = document.getElementsByName(emoji);
-  console.log(selected_emoji[0]);
-  // selected_emoji[0].src = "images/" + emoji + ".png";
+  var placeholder = document.getElementById("result_area");
+  var path = "images/" + emoji + ".png";
+  placeholder.src = path;
 }
 
 function process(message) {
