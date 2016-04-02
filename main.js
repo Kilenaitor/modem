@@ -214,7 +214,7 @@ function autoCorrelate(buf, sampleRate) {
 
 function updateEmoji() {
   var cycles = new Array;
-  analyser.getFlotTimeDomainData(buf);
+  analyser.getFloatTimeDomainData(buf);
   var ac = autoCorrelate(buf, context.sampleRate);
   
   var freq = null;
