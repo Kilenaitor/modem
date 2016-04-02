@@ -285,7 +285,7 @@ function updatePitch() {
   if(listening) {
     setTimeout(function() {
       window.requestAnimationFrame(updatePitch);
-    }, 290)
+    }, 190)
   }
 }
 
@@ -324,8 +324,8 @@ function process(message) {
 function processEmoji(emoji) {
   
   emit(freqMin, context.currentTime);
-  emit(toEmojiFreq(emoji), context.currentTime + 0.3);
-  emit(freqMax, context.currentTime + 0.6);
+  emit(toEmojiFreq(emoji), context.currentTime + 0.2);
+  emit(freqMax, context.currentTime + 0.4);
   
 }
 
