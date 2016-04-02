@@ -238,6 +238,7 @@ function updateEmoji() {
   }
   if(finished_capturing) {
     selectEmoji(emoji);
+    listening = false;
   }
   if(listening) {
     setTimeout(function() {
@@ -285,8 +286,8 @@ function updatePitch() {
 
 function selectEmoji(emoji) {
   console.log(emoji);
-  // var selected_emoji = document.getElementsByName(emoji);
-  // selected_emoji[0].src = "images/" + emoji + ".png";
+  var selected_emoji = document.getElementsByName(emoji);
+  selected_emoji[0].src = "images/" + emoji + ".png";
 }
 
 function process(message) {
