@@ -40,7 +40,7 @@ function listen() {
     var message = document.getElementById('message');
     message.value = "";
   
-    var listen_text = document.getElementById('listen').innerText;
+    var listen_text = document.getElementById('message_listen').innerText;
     if(listen_text == "Cancel") {
       listening = false;
       processing = false;
