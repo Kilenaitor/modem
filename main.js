@@ -280,7 +280,7 @@ function updatePitch() {
   if(listening) {
     setTimeout(function() {
       window.requestAnimationFrame(updatePitch);
-    }, 190)
+    }, 290)
   }
 }
 
@@ -319,8 +319,8 @@ function process(message) {
 function processEmoji(emoji) {
   
   emit(freqMin, context.currentTime);
-  emit(toEmojiFreq(emoji), context.currentTime + 0.2);
-  emit(freqMax, context.currentTime + 0.4);
+  emit(toEmojiFreq(emoji), context.currentTime + 0.3);
+  emit(freqMax, context.currentTime + 0.6);
   
 }
 
@@ -385,7 +385,6 @@ function toEmoji(freq) {
 }
 
 function emit(tone, time) {  
-  console.log(tone + " " + time);
   // GainNode
   var gainNode = context.createGain();
   gainNode.gain.value = 0;
