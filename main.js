@@ -64,7 +64,7 @@ function listen() {
       listening = true;
       processing = true;
       document.getElementById('emoji_listen').innerText = "Cancel";
-      liveEmojiInput();
+      liveInput();
     }
   }
 }
