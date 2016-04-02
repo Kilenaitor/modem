@@ -107,7 +107,7 @@ function stopListening() {
     document.getElementById('emoji_listen').innerText = "Listen";
     emoji = "";
   } else {
-    document.getElementById('listen').innerText = "Listen";
+    document.getElementById('message_listen').innerText = "Listen";
     document.getElementById('submit').disabled = false;
     message.placeholder = "Type Message";
     message = "";
