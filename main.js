@@ -142,8 +142,8 @@ function gotStream(stream) {
   }
 }
 
-function output(...args) {
-  var result = args.join("");
+function output() {
+  var result = arguments.join("");
   var message = document.getElementById('message');
   message.value = result;
 }
