@@ -243,7 +243,7 @@ function updateEmoji() {
   }
   if(listening) {
     setTimeout(function() {
-      window.requestAnimationFrame(updatePitch);
+      window.requestAnimationFrame(updateEmoji);
     }, 190);
   }
 }
