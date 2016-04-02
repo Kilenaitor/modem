@@ -64,7 +64,7 @@ function listen() {
       listening = true;
       processing = true;
       document.getElementById('emoji_listen').innerText = "Cancel";
-      liveInput();
+      liveEmojiInput();
     }
   }
 }
@@ -143,9 +143,11 @@ function gotStream(stream) {
 }
 
 function output() {
-  var result = arguments.join("");
-  var message = document.getElementById('message');
-  message.value = result;
+  if(typeof arguments !== undefined && arguments.length > 0) {
+    var result = arguments.join("");
+    var message = document.getElementById('message');
+    message.value = result;
+  }
 }
 
 function liveInput() {
