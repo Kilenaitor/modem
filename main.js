@@ -103,10 +103,15 @@ function selected(emoji) {
 function stopListening() {
   listening = false;
   processing = false;
-  document.getElementById('listen').innerText = "Listen";
-  document.getElementById('submit').disabled = false;
-  message.placeholder = "Type Message";
-  message = "";
+  if(document.getElementById('emoji_box').checked) {
+    document.getElementById('emoji_listen').innerText = "Listen";
+    emoji = "";
+  } else {
+    document.getElementById('listen').innerText = "Listen";
+    document.getElementById('submit').disabled = false;
+    message.placeholder = "Type Message";
+    message = "";
+  }
   capturing = false;
   finished_capturing = false;
 }
