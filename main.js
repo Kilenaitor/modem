@@ -232,12 +232,10 @@ function updateEmoji() {
     if(note === "^") {
       capturing = true;
     }
-    if(note === "$") {
-      capturing = false;
-      finished_capturing = true;
-    }
     if(capturing && note != "^") {
       emoji = note;
+      capturing = false;
+      finished_capturing = true;
     }
     console.log(note);
   }
