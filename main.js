@@ -7,9 +7,11 @@ var mediaStreamSource = null;
 var analyser = null;
 
 var alphabet = "^\n abcdefghijklmnopqrstuvwxyz$";
+var emoticons = ["^", "smile", "cry", "cool", "sad", "sleep", "sob", "uneasy", "kiss", "$"];
 var start = '^';
 var end = '$';
 
+var supersonic = false;
 var freqMin = 440;
 var freqMax = 1760;
 
@@ -18,6 +20,7 @@ var processing = false;
 var listening = false;
 
 var message = "";
+var emoji = "";
 var capturing = false;
 var finished_capturing = false;
 
@@ -25,7 +28,7 @@ function submit() {
   if(processing)
     return;
   var message = document.getElementById('message').value;
-  if(message.length == 0)
+  if(message.length === 0)
     return;
   processing = true;
   document.getElementById('submit').disabled = true;
@@ -33,24 +36,68 @@ function submit() {
 }
 
 function listen() {
-  var message = document.getElementById('message');
-  message.value = "";
+  if(!document.getElementById('emoji_box').checked) {
+    var message = document.getElementById('message');
+    message.value = "";
   
-  var listen_text = document.getElementById('listen').innerText;
-  if(listen_text == "Cancel") {
-    listening = false;
-    processing = false;
-    document.getElementById('listen').innerText = "Listen";
-    document.getElementById('submit').disabled = false;
-    message.placeholder = "Type Message";
+    var listen_text = document.getElementById('listen').innerText;
+    if(listen_text == "Cancel") {
+      listening = false;
+      processing = false;
+      document.getElementById('message_listen').innerText = "Listen";
+      document.getElementById('submit').disabled = false;
+      message.placeholder = "Type Message";
+    } else {
+      listening = true;
+      processing = true;
+      document.getElementById('message_listen').innerText = "Cancel";
+      document.getElementById('submit').disabled = true;
+      message.placeholder = "Listening...";
+      liveInput();
+    }
   } else {
-    listening = true;
-    processing = true;
-    document.getElementById('listen').innerText = "Cancel";
-    document.getElementById('submit').disabled = true;
-    message.placeholder = "Listening...";
-    liveInput();
+    if(listening) {
+      listening = false;
+      processing = false;
+      document.getElementById('emoji_listen').innerText = "Listen";
+    } else {
+      listening = true;
+      processing = true;
+      document.getElementById('emoji_listen').innerText = "Cancel";
+      liveInput();
+    }
   }
+}
+
+window.onload = function() {
+  document.getElementById("emoji_wrapper").style.display = "none";
+}
+
+document.getElementById('supersonic').onclick = function() {
+  if(supersonic) {
+    supersonic = false;
+    freqMin = 440;
+    freqMax = 1760;
+  } else {
+    supersonic = true;
+    freqMin = 18500;
+    freqMax = 19500;
+  }
+}
+
+document.getElementById('emoji_box').onclick = function() {
+  if(document.getElementById('emoji_box').checked) {
+    document.getElementById("message_wrapper").style.display = "none";
+    document.getElementById("emoji_wrapper").style.display = "block";
+  }
+  else {
+    document.getElementById("message_wrapper").style.display = "block";
+    document.getElementById("emoji_wrapper").style.display = "none";
+  }
+}
+
+function selected(emoji) {
+  processEmoji(emoji.name);
 }
 
 function stopListening() {
@@ -88,7 +135,11 @@ function gotStream(stream) {
   analyser = context.createAnalyser();
   analyser.fftSize = 2048;
   mediaStreamSource.connect(analyser);
-  updatePitch();
+  if(document.getElementById('emoji_box').checked) {
+    updateEmoji();
+  } else {
+    updatePitch();
+  }
 }
 
 function output(...args) {
@@ -161,12 +212,48 @@ function autoCorrelate(buf, sampleRate) {
   return -1;
 }
 
-function updatePitch(time) {
+function updateEmoji() {
+  var cycles = new Array;
+  analyser.getFlotTimeDomainData(buf);
+  var ac = autoCorrelate(buf, context.sampleRate);
+  
+  var freq = null;
+  
+  console.log(freq);
+  
+  if(ac !== -1 && ac < freqMax && ac > freqMin) {
+    freq = ac;
+    var note = toEmoji(freq);
+    if(note === "^") {
+      capturing = true;
+    }
+    if(note === "$") {
+      capturing = false;
+      finished_capturing = true;
+    }
+    if(capturing && note != "^") {
+      emoji = note;
+    }
+    console.log(note);
+  }
+  if(finished_capturing) {
+    selectEmoji(emoji);
+  }
+  if(listening) {
+    setTimeout(function() {
+      window.requestAnimationFrame(updatePitch);
+    }, 190);
+  }
+}
+
+function updatePitch() {
   var cycles = new Array;
   analyser.getFloatTimeDomainData(buf);
   var ac = autoCorrelate(buf, context.sampleRate);
   
   var freq = null;
+  
+  // console.log(freq);
   
   if(ac !== -1 && ac < freqMax && ac > freqMin) {
     freq = ac;
@@ -181,18 +268,25 @@ function updatePitch(time) {
     if(capturing && note != "^") {
       message += note;
     }
+    console.log(note);
   } else {
     //console.log("ac is -1");
   }
   if(finished_capturing) {
-    output("Received: \"", message, "\"");
+    output("Received: \"", message, "\""   );
     stopListening();
   }
   if(listening) {
     setTimeout(function() {
       window.requestAnimationFrame(updatePitch);
-    }, 200)
+    }, 190)
   }
+}
+
+function selectEmoji(emoji) {
+  console.log(emoji);
+  // var selected_emoji = document.getElementsByName(emoji);
+  // selected_emoji[0].src = "images/" + emoji + ".png";
 }
 
 function process(message) {
@@ -220,6 +314,13 @@ function process(message) {
   }, 200 * message.length);
 }
 
+function processEmoji(emoji) {
+  
+  emit(freqMin, context.currentTime);
+  emit(toEmojiFreq(emoji), context.currentTime + 0.2);
+  emit(freqMax, context.currentTime + 0.4);
+}
+
 function toFreq(char) {
   var index = alphabet.indexOf(char);
   if(index === -1) {
@@ -231,7 +332,18 @@ function toFreq(char) {
   return freqMin + offset;
 }
 
-function toChar(freq) {
+function toEmojiFreq(emoji) {
+  var index = emoticons.indexOf(emoji);
+  if(index === -1) {
+    console.error("Invalid emoji: ", emoji);
+    index = emoticons.length - 1;
+  }
+  var percent = index / emoticons.length;
+  var offset = Math.round(range * percent);
+  return freqMin + offset;
+}
+
+function toChar(freq, emoji) {
   if(!(freqMin < freq && freq < freqMax)) {
     if(freqMin - freq < 50) {
       freq = freqMin;
@@ -250,7 +362,27 @@ function toChar(freq) {
   return alphabet[index];
 } 
 
-function emit(tone, time) {
+function toEoji(freq) {
+  if(!(freqMin < freq && freq < freqMax)) {
+    if(freqMin - freq < 50) {
+      freq = freqMin;
+    } else if (freq - freqMax < 50) {
+      freq = freqMax;
+    } else {
+      console.error("Invalid frequency: ", freq);
+      return;
+    }
+  }
+  
+  var percent = (freq - freqMin) / range;
+  var index = Math.round(emoticons.length * percent);
+  if(index == emoticons.length)
+    return emoticons[index-1];
+  return emoticons[index];
+}
+
+function emit(tone, time) {  
+  console.log(tone + " " + time);
   // GainNode
   var gainNode = context.createGain();
   gainNode.gain.value = 0;
