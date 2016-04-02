@@ -241,7 +241,8 @@ function updateEmoji() {
   }
   if(finished_capturing) {
     selectEmoji(emoji);
-    stopListening();
+    //stopListening();
+    emoji = "";
   }
   if(listening) {
     setTimeout(function() {
