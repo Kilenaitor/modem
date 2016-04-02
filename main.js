@@ -319,6 +319,7 @@ function processEmoji(emoji) {
   emit(freqMin, context.currentTime);
   emit(toEmojiFreq(emoji), context.currentTime + 0.2);
   emit(freqMax, context.currentTime + 0.4);
+  
 }
 
 function toFreq(char) {
