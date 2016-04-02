@@ -23,7 +23,6 @@
             </div>
             <div class="image_row">
                 <img class="emoji" src="images/smile.png" onclick="selected(this); return false;" name="smile" />
-                <img class="emoji" src="images/sad.png" onclick="selected(this); return false;" name="sad" />
                 <img class="emoji" src="images/sleep.png" onclick="selected(this); return false;" name="sleep" />
                 <img class="emoji" src="images/sob.png" onclick="selected(this); return false;" name="sob" />
             </div>
@@ -31,7 +30,6 @@
                 <img class="emoji" src="images/cool.png" onclick="selected(this); return false;" name="cool" />
                 <img class="emoji" src="images/cry.png" onclick="selected(this); return false;" name="cry" />
                 <img class="emoji" src="images/smile.png" onclick="selected(this); return false;" name="smile" />
-                <img class="emoji" src="images/kiss.png" onclick="selected(this); return false;" name="kiss" />
             </div>
             <button id="emoji_listen" onclick="listen(); return false;">Listen</button>
             <br />

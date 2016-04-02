@@ -7,7 +7,7 @@ var mediaStreamSource = null;
 var analyser = null;
 
 var alphabet = "^\n abcdefghijklmnopqrstuvwxyz$";
-var emoticons = ["^", "smile", "cry", "cool", "sad", "sleep", "sob", "uneasy", "kiss", "$"];
+var emoticons = ["^", "smile", "cry", "cool", "sleep", "sob", "uneasy", "$"];
 var start = '^';
 var end = '$';
 
@@ -238,7 +238,7 @@ function updateEmoji() {
   }
   if(finished_capturing) {
     selectEmoji(emoji);
-    listening = false;
+    stopListening();
   }
   if(listening) {
     setTimeout(function() {
