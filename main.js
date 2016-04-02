@@ -290,9 +290,13 @@ function updatePitch() {
 }
 
 function selectEmoji(emoji) {
-  var placeholder = document.getElementById("result_area");
-  var path = "images/" + emoji + ".png";
-  placeholder.src = path;
+  if(emoji === "" || typeof emoji === undefined || !emoji) {
+    console.error("Unable to read emoji");
+  } else {
+    var placeholder = document.getElementById("result_area");
+    var path = "images/" + emoji + ".png";
+    placeholder.src = path;
+  }
 }
 
 function process(message) {
