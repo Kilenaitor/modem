@@ -93,3 +93,9 @@ html, body {
   width: auto;
   padding: 10px 20px;
 }
+
+#result_area {
+  border: 1px solid black;
+  padding: 15px;
+  margin-bottom: 20px;
+}
