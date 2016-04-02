@@ -29,7 +29,7 @@
             <div class="image_row">
                 <img class="emoji" src="images/cool.png" onclick="selected(this); return false;" name="cool" />
                 <img class="emoji" src="images/cry.png" onclick="selected(this); return false;" name="cry" />
-                <img class="emoji" src="images/smile.png" onclick="selected(this); return false;" name="smile" />
+                <img class="emoji" src="images/uneasy.png" onclick="selected(this); return false;" name="uneasy" />
             </div>
             <button id="emoji_listen" onclick="listen(); return false;">Listen</button>
             <br />
